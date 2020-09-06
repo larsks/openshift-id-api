@@ -1,3 +1,3 @@
-from .usergroup import User, Group, Identity
+from .user import User, Group, Identity
 from .project import Project
-from .rbac import Role, ClusterRole, RoleBinding, ClusterRoleBinding
+from .role import Role, ClusterRole, RoleBinding, ClusterRoleBinding
