@@ -134,7 +134,7 @@ class App(flask.Flask):
         rb = self.api.rolebinding.get(rbname, namespace=project)
 
         rb['subjects'] = [
-            sub for sub in rb['subjects']
+            sub for sub in rb.get('subjects', [])
             if sub['kind'] != 'User' or sub['name'] != user
         ]
 
