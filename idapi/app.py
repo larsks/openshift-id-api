@@ -109,18 +109,13 @@ class App(flask.Flask):
         if not rb.get('subjects'):
             rb['subjects'] = []
 
-        if any(x['kind'] == 'User' and x['name'] == user
+        if not any(x['kind'] == 'User' and x['name'] == user
                for x in rb['subjects']):
-            self.logger.error('user %s already a member of %s in project %s',
-                              user,
-                              rbname,
-                              project)
-            raise ResourceExistsError('User', user)
+            rb['subjects'].append({
+                'kind': 'User',
+                'name': user,
+            })
 
-        rb['subjects'].append({
-            'kind': 'User',
-            'name': user,
-        })
         return self.api.rolebinding.apply(rb)
 
     def remove_user_from_rolebinding(self, project, role, user):
