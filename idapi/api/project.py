@@ -24,4 +24,4 @@ class Project(BaseAPI):
                 'openshift.io/requester': requester
             }
 
-        super().create(proj)
+        return super().create(proj)
