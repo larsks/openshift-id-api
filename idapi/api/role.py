@@ -40,9 +40,6 @@ class RoleBinding(BaseAPI):
 
         return super().create(rolebinding, **kwargs)
 
-    def add_user(self, rolename, projname, username):
-        role = self.get(rolename, namespace=projname)
-
 
 class ClusterRoleBinding(BaseAPI):
     api_version = api_version
