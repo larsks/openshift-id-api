@@ -1,14 +1,13 @@
+import base64
 import flask
 import os
 
 from functools import wraps
-from kubernetes import client, config
-from openshift.dynamic import DynamicClient
+from kubernetes import config
 from openshift.dynamic import exceptions as openshift_exceptions
 
-from idapi.api import OpenShiftAPI
 from idapi.app import App
-from idapi.exc import ApplicationError, ResourceExistsError, ResourceNotFoundError
+from idapi.exc import ApplicationError, ResourceExistsError, AccessDeniedError
 
 
 def handle_http_errors(func):
@@ -39,21 +38,50 @@ def handle_http_errors(func):
                     'status': 'error',
                     'code': err.status,
                     'reason': str(err),
-                }, 409
+                }, err.status
             ))
 
     return _
 
 
-if os.environ.get('USE_K8S_SA'):
+if os.environ.get('IDAPI_USE_SA'):
     config.load_incluster_config()
 else:
     config.load_kube_config()
 
-k8api = client.ApiClient()
-dynclient = DynamicClient(k8api)
-api = OpenShiftAPI(dynclient)
-app = App(__name__, api)
+app = App(__name__)
+admin_token = os.environ.get('IDAPI_ADMIN_TOKEN')
+
+
+@app.before_request
+@handle_http_errors
+def check_access():
+    app.logger.warning('in check_access')
+
+    if 'authorization' in flask.request.headers:
+        authtype, creds = flask.request.headers['authorization'].split(None, 1)
+        app.logger.info('auth via %s with %s', authtype, creds)
+
+        if authtype.lower() == 'basic':
+            user, pw = base64.b64decode(creds).decode().split(':')
+            if user == 'admin' and pw == admin_token:
+                return
+
+            if 'IDAPI_AUTH_DB' in os.environ:
+                authdb = os.environ['IDAPI_AUTH_DB']
+                app.logger.warning('looking for user %s in auth db %s',
+                                   user,
+                                   authdb)
+                try:
+                    with open(f'/{authdb}/{user}') as fd:
+                        correct_pw = fd.read()
+
+                    if correct_pw == pw:
+                        return
+                except FileNotFoundError:
+                    pass
+
+    raise AccessDeniedError()
 
 
 @app.route('/user/<user>')
