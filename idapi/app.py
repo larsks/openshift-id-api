@@ -1,6 +1,9 @@
 import flask
 
-from idapi.exc import ResourceExistsError
+from kubernetes import client
+from openshift.dynamic import DynamicClient
+
+from idapi.api import OpenShiftAPI
 
 
 class Response(flask.Response):
@@ -10,10 +13,19 @@ class Response(flask.Response):
 class App(flask.Flask):
     response_class = Response
     valid_roles = ['admin', 'edit', 'view']
+    rbprefix = 'moc-'
 
-    def __init__(self, name, api, *args, **kwargs):
-        self.api = api
+    def rolebinding_name_from_role(self, role):
+        return f'{self.rbprefix}{role}'
+
+    def __init__(self, name, *args, **kwargs):
         super().__init__(name, *args, **kwargs)
+
+        self.logger.info('creating api client')
+        k8api = client.ApiClient()
+        dynclient = DynamicClient(k8api)
+        self.api = OpenShiftAPI(dynclient)
+        self.logger.info('finished starting up')
 
     def get_user(self, user):
         self.logger.info('get user %s', user)
@@ -63,7 +75,7 @@ class App(flask.Flask):
         if role not in self.valid_roles:
             raise ValueError(role)
 
-        rbname = f'moc-{role}'
+        rbname = self.rolebinding_name_from_role(role)
         self.logger.info('get rolebinding %s from project %s',
                          rbname,
                          project)
@@ -80,7 +92,7 @@ class App(flask.Flask):
         if role not in self.valid_roles:
             raise ValueError(role)
 
-        rbname = f'moc-{role}'
+        rbname = self.rolebinding_name_from_role(role)
         self.logger.info('create rolebinding %s in project %s',
                          rbname,
                          project)
@@ -91,7 +103,7 @@ class App(flask.Flask):
         if role not in self.valid_roles:
             raise ValueError(role)
 
-        rbname = f'moc-{role}'
+        rbname = self.rolebinding_name_from_role(role)
         self.logger.info('delete rolebinding %s in project %s',
                          rbname,
                          project)
@@ -101,7 +113,7 @@ class App(flask.Flask):
         if role not in self.valid_roles:
             raise ValueError(role)
 
-        rbname = f'moc-{role}'
+        rbname = self.rolebinding_name_from_role(role)
         self.logger.info('add user %s to rolebinding %s in project %s',
                          user, rbname, project)
 
@@ -110,7 +122,7 @@ class App(flask.Flask):
             rb['subjects'] = []
 
         if not any(x['kind'] == 'User' and x['name'] == user
-               for x in rb['subjects']):
+                   for x in rb['subjects']):
             rb['subjects'].append({
                 'kind': 'User',
                 'name': user,
@@ -122,7 +134,7 @@ class App(flask.Flask):
         if role not in self.valid_roles:
             raise ValueError(role)
 
-        rbname = f'moc-{role}'
+        rbname = self.rolebinding_name_from_role(role)
         self.logger.info('remove user %s from rolebinding %s in project %s',
                          user, rbname, project)
 
