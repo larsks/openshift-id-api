@@ -1,21 +1,29 @@
 class ApplicationError(Exception):
-    def __init__(self, reason, status=500):
-        self.status = status
+    status = 500
+
+    def __init__(self, reason):
         self.reason = reason
         super().__init__(reason)
 
 
 class ResourceExistsError(ApplicationError):
+    status = 409
+
     def __init__(self, rtype, rname):
-        self.rtype = rtype
-        self.rname = rname
-        reason = f'{self.rtype} resource {self.rname} already exists'
-        super().__init__(reason, status=409)
+        reason = f'{rtype} resource {rname} already exists'
+        super().__init__(reason)
 
 
 class ResourceNotFoundError(ApplicationError):
+    status = 404
+
     def __init__(self, rtype, rname):
-        self.rtype = rtype
-        self.rname = rname
-        reason = f'{self.rtype} resource {self.rname} does not exist'
-        super().__init__(reason, status=404)
+        reason = f'{rtype} resource {rname} does not exist'
+        super().__init__(reason)
+
+
+class AccessDeniedError(ApplicationError):
+    status = 403
+
+    def __init__(self):
+        super().__init__('Access requires authorization')
