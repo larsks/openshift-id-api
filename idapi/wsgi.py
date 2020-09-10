@@ -1,5 +1,6 @@
 import base64
 import flask
+import logging
 import os
 
 from functools import wraps
@@ -8,6 +9,9 @@ from openshift.dynamic import exceptions as openshift_exceptions
 
 from idapi.app import App
 from idapi.exc import ApplicationError, ResourceExistsError, AccessDeniedError
+
+loglevel = os.environ.get('IDAPI_LOG_LEVEL', 'INFO').upper()
+logging.basicConfig(level=loglevel)
 
 
 def handle_http_errors(func):

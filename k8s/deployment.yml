@@ -17,6 +17,8 @@ spec:
           ports:
             - containerPort: 8080
           env:
+            - name: IDAPI_LOG_LEVEL
+              value: "info"
             - name: IDAPI_USE_SA
               value: "1"
             - name: IDAPI_AUTH_DB
