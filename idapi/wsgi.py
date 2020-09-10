@@ -50,32 +50,37 @@ else:
     config.load_kube_config()
 
 app = App(__name__)
-admin_token = os.environ.get('IDAPI_ADMIN_TOKEN').strip()
+
+if 'IDAPI_ADMIN_TOKEN' in os.environ:
+    admin_token = os.environ.get('IDAPI_ADMIN_TOKEN').strip()
+else:
+    admin_token = None
 
 
 @app.before_request
 @handle_http_errors
 def check_access():
-    app.logger.warning('in check_access')
-
     if 'authorization' in flask.request.headers:
         authtype, creds = flask.request.headers['authorization'].split(None, 1)
         app.logger.info('auth via %s with %s', authtype, creds)
 
         if authtype.lower() == 'basic':
             user, pw = base64.b64decode(creds).decode().split(':')
-            if user == 'admin' and pw == admin_token:
+            if admin_token is not None and user == 'admin' and pw == admin_token:
+                app.logger.info('authenticated admin user via admin token')
                 return
             elif 'IDAPI_AUTH_DB' in os.environ:
                 authdb = os.environ['IDAPI_AUTH_DB']
-                app.logger.warning('looking for user %s in auth db %s',
-                                   user,
-                                   authdb)
+                app.logger.info('looking for user %s in auth db %s',
+                                user,
+                                authdb)
                 try:
                     with open(f'/{authdb}/{user}') as fd:
                         correct_pw = fd.read().strip()
 
                     if correct_pw == pw:
+                        app.logger.info('authenticated user %s via authdb',
+                                        user)
                         return
                 except FileNotFoundError:
                     pass
