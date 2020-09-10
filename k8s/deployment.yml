@@ -1,0 +1,70 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: idapi
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: idapi
+  template:
+    metadata:
+      labels:
+        app: idapi
+    spec:
+      serviceAccountName: idapi
+      containers:
+        - name: idapi
+          image: larsks/idapi:20200908-0
+          ports:
+            - containerPort: 8080
+          env:
+            - name: IDAPI_USE_SA
+              value: "1"
+            - name: IDAPI_AUTH_DB
+              value: "/auth"
+            - name: IDAPI_ADMIN_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: idapi-admintoken
+                  key: admin_token
+          volumeMounts:
+            - name: authdb
+              mountPath: /auth
+              readOnly: true
+      volumes:
+        - name: authdb
+          secret:
+            secretName: idapi-authdb
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: idapi
+  name: idapi
+spec:
+  ports:
+    - name: 8080-8080
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+  selector:
+    app: idapi
+  type: ClusterIP
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  creationTimestamp: null
+  labels:
+    app: idapi
+  name: idapi
+spec:
+  port:
+    targetPort: 8080-8080
+  tls:
+    termination: edge
+  to:
+    name: idapi

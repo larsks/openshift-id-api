@@ -1,0 +1,11 @@
+---
+namespace: idapi
+secretGenerator:
+  - name: idapi-authdb
+    envs:
+      - authdb.env
+  - name: idapi-admintoken
+    files:
+      - admin_token
+resources:
+  - deployment.yml
