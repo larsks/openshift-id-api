@@ -66,7 +66,7 @@ else:
 def check_access():
     if 'authorization' in flask.request.headers:
         authtype, creds = flask.request.headers['authorization'].split(None, 1)
-        app.logger.info('auth via %s with %s', authtype, creds)
+        app.logger.info('starting %s authentication', authtype)
 
         if authtype.lower() == 'basic':
             user, pw = base64.b64decode(creds).decode().split(':')
