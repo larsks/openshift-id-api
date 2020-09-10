@@ -1,9 +1,9 @@
 FROM alpine
 
-RUN apk add --update python3 uwsgi uwsgi-python3 uwsgi-http
+RUN apk add --update python3 py3-pip uwsgi uwsgi-python3 uwsgi-http
 
 COPY requirements.txt /tmp/requirements.txt
-RUN pip3 install -r /tmp/requirements.txt
+RUN /usr/bin/pip3 install -r /tmp/requirements.txt
 
 COPY . /app
 WORKDIR /app
