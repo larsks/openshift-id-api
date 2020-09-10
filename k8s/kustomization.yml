@@ -1,9 +1,10 @@
 ---
+commonLabels:
+  app: idapi
 namespace: idapi
 secretGenerator:
   - name: idapi-authdb
-    envs:
-      - authdb.env
+    env: authdb.env
   - name: idapi-admintoken
     files:
       - admin_token

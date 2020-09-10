@@ -9,9 +9,6 @@ spec:
     matchLabels:
       app: idapi
   template:
-    metadata:
-      labels:
-        app: idapi
     spec:
       serviceAccountName: idapi
       containers:
@@ -41,8 +38,6 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  labels:
-    app: idapi
   name: idapi
 spec:
   ports:
@@ -58,8 +53,6 @@ apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
   creationTimestamp: null
-  labels:
-    app: idapi
   name: idapi
 spec:
   port:
