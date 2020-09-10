@@ -13,7 +13,7 @@ spec:
       serviceAccountName: idapi
       containers:
         - name: idapi
-          image: larsks/idapi:20200910-1
+          image: larsks/idapi:20200910-2
           ports:
             - containerPort: 8080
           env:
