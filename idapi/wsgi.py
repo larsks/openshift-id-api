@@ -50,7 +50,7 @@ else:
     config.load_kube_config()
 
 app = App(__name__)
-admin_token = os.environ.get('IDAPI_ADMIN_TOKEN')
+admin_token = os.environ.get('IDAPI_ADMIN_TOKEN').strip()
 
 
 @app.before_request
@@ -66,15 +66,14 @@ def check_access():
             user, pw = base64.b64decode(creds).decode().split(':')
             if user == 'admin' and pw == admin_token:
                 return
-
-            if 'IDAPI_AUTH_DB' in os.environ:
+            elif 'IDAPI_AUTH_DB' in os.environ:
                 authdb = os.environ['IDAPI_AUTH_DB']
                 app.logger.warning('looking for user %s in auth db %s',
                                    user,
                                    authdb)
                 try:
                     with open(f'/{authdb}/{user}') as fd:
-                        correct_pw = fd.read()
+                        correct_pw = fd.read().strip()
 
                     if correct_pw == pw:
                         return
